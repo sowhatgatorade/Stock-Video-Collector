@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Video Scraper v1.4.0
-# Headless crawler with PyQt6 GUI — full metadata + keyword search + download manager
+# Headless crawler with PyQt5 GUI — full metadata + keyword search + download manager
 # Phase 1-3: Search quality, thumbnail pipeline, card/grid view
 # Phase 4-6: Detail panel, archive management, collections, stats, filename templates
 # v0.2.1: Bug fixes, performance optimizations, WAL mode, bounded logs, debounced UI
@@ -166,7 +166,7 @@ def _bootstrap():
         subprocess.check_call([sys.executable, '-m', 'ensurepip', '--default-pip'])
 
     # Install Python packages
-    for pkg in ['PyQt6', 'playwright', 'imageio-ffmpeg']:
+    for pkg in ['PyQt5', 'playwright', 'imageio-ffmpeg']:
         import_name = pkg.replace('-', '_').lower()
         try:
             __import__(import_name)
@@ -203,7 +203,7 @@ import json, sqlite3, asyncio, threading
 from datetime import datetime
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode, unquote
 
-from PyQt6.QtWidgets import (
+from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTabWidget, QLabel, QPushButton, QLineEdit, QTextEdit, QSpinBox,
     QCheckBox, QGroupBox, QFileDialog, QTableWidget, QTableWidgetItem,
@@ -212,20 +212,17 @@ from PyQt6.QtWidgets import (
     QSplitter, QSlider, QStackedWidget, QSizePolicy, QLayout,
     QSystemTrayIcon, QGraphicsOpacityEffect
 )
-from PyQt6.QtCore import (
+from PyQt5.QtCore import (
     Qt, QThread, pyqtSignal, QTimer, QSize, QRect, QPoint, QUrl,
     QPropertyAnimation, QEasingCurve
 )
-from PyQt6.QtGui import (, QIcon
-    QColor, QTextCursor, QPixmap, QPainter, QBrush, QFont,
-    QKeySequence, QShortcut, QAction, QIcon
-)
+from PyQt5.QtGui import (QIcon, QColor, QTextCursor, QPixmap, QPainter, QBrush, QFont, QKeySequence)
 
-# Optional: in-app video preview (requires PyQt6-Multimedia)
+# Optional: in-app video preview (requires PyQt5-Multimedia)
 _HAS_VIDEO = False
 try:
-    from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
-    from PyQt6.QtMultimediaWidgets import QVideoWidget
+    from PyQt5.QtMultimedia import QMediaPlayer, QAudioOutput
+    from PyQt5.QtMultimediaWidgets import QVideoWidget
     _HAS_VIDEO = True
 except ImportError:
     pass
@@ -5126,7 +5123,7 @@ class StarRating(QWidget):
 
     def paintEvent(self, e):
         from math import cos, sin, pi
-        from PyQt6.QtGui import QPolygon
+        from PyQt5.QtGui import QPolygon
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         display = self._hover_rating if self._hover_rating > 0 else self._rating
@@ -7138,16 +7135,19 @@ class MainWindow(QMainWindow):
             self._video_widget = QVideoWidget()
             self._video_widget.setFixedHeight(Z(200))
             self._video_widget.setStyleSheet(f"background:{C('bg_video')}; border-radius:{Z(6)}px;")
-            self._audio_output = QAudioOutput()
-            self._audio_output.setVolume(0.5)
-            self._video_player = QMediaPlayer()
-            self._video_player.setAudioOutput(self._audio_output)
-            self._video_player.setVideoOutput(self._video_widget)
-            self._preview_stack.addWidget(self._video_widget)  # index 1
-        lay.addWidget(self._preview_stack)
+            # 创建视频播放器
+self.video_player = QMediaPlayer()
+
+# 创建音频输出设备（喇叭）
+self.audio_output = QAudioOutput()
+self.video_player.setAudioOutput(self.audio_output)
+
+# 创建视频显示控件（屏幕）
+self.video_widget = QVideoWidget()
+self.video_player.setVideoOutput(self.video_widget)
 
         # ── Video controls (play/pause/stop + scrub) ──────────────────────
-        if _HAS_VIDEO:
+if _HAS_VIDEO:
             vctrl = QHBoxLayout(); vctrl.setSpacing(Z(4))
             self.btn_preview_play = QPushButton("Play")
             self.btn_preview_play.setObjectName("success"); self.btn_preview_play.setFixedHeight(Z(28))
@@ -7173,169 +7173,170 @@ class MainWindow(QMainWindow):
             self._preview_timer.start(250)
 
         # ── Title + favorite ──────────────────────────────────────────────
-        title_row = QHBoxLayout(); title_row.setSpacing(Z(6))
-        self.detail_title = QLabel("Select a clip")
-        self.detail_title.setWordWrap(True)
-        self.detail_title.setStyleSheet(f"color:{C('text')}; font-size:{Z(13)}px; font-weight:700;")
-        title_row.addWidget(self.detail_title, 1)
-        self.btn_detail_fav = QPushButton("\u2661")
-        self.btn_detail_fav.setFixedSize(Z(32), Z(32))
-        self.btn_detail_fav.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_detail_fav.setStyleSheet(
-            f"font-size:{Z(18)}px; background:transparent; border:none; color:{C('text_disabled')};")
-        self.btn_detail_fav.setToolTip("Toggle favorite")
-        self.btn_detail_fav.clicked.connect(self._detail_toggle_fav)
-        title_row.addWidget(self.btn_detail_fav)
-        lay.addLayout(title_row)
+title_row = QHBoxLayout(); title_row.setSpacing(Z(6))
+self.detail_title = QLabel("Select a clip")
+self.detail_title.setWordWrap(True)
+self.detail_title.setStyleSheet(f"color:{C('text')}; font-size:{Z(13)}px; font-weight:700;")
+title_row.addWidget(self.detail_title, 1)
+self.btn_detail_fav = QPushButton("\u2661")
+self.btn_detail_fav.setFixedSize(Z(32), Z(32))
+self.btn_detail_fav.setCursor(Qt.CursorShape.PointingHandCursor)
+self.btn_detail_fav.setStyleSheet(
+f"font-size:{Z(18)}px; background:transparent; border:none; color:{C('text_disabled')};")
+self.btn_detail_fav.setToolTip("Toggle favorite")
+self.btn_detail_fav.clicked.connect(self._detail_toggle_fav)
+title_row.addWidget(self.btn_detail_fav)
+lay.addLayout(title_row)
 
         # ── Star rating ───────────────────────────────────────────────────
-        self.detail_stars = StarRating(0, size=Z(18), interactive=True)
-        self.detail_stars.rating_changed.connect(self._detail_set_rating)
-        lay.addWidget(self.detail_stars)
+self.detail_stars = StarRating(0, size=Z(18), interactive=True)
+self.detail_stars.rating_changed.connect(self._detail_set_rating)
+lay.addWidget(self.detail_stars)
 
-        # ── Scrollable metadata + notes + tags area ───────────────────────
-        meta_scroll = QScrollArea(); meta_scroll.setWidgetResizable(True)
-        meta_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        meta_scroll.setStyleSheet("QScrollArea { background:transparent; }")
-        meta_inner = QWidget(); meta_inner.setStyleSheet("background:transparent;")
-        self._detail_meta_lay = QVBoxLayout(meta_inner)
-        self._detail_meta_lay.setContentsMargins(0,0,0,0); self._detail_meta_lay.setSpacing(Z(4))
-        meta_scroll.setWidget(meta_inner)
-        lay.addWidget(meta_scroll, 1)
+# ── Scrollable metadata + notes + tags area ───────────────────────
+meta_scroll = QScrollArea(); meta_scroll.setWidgetResizable(True)
+meta_scroll.setFrameShape(QFrame.Shape.NoFrame)
+meta_scroll.setStyleSheet("QScrollArea { background:transparent; }")
+meta_inner = QWidget(); meta_inner.setStyleSheet("background:transparent;")
+self._detail_meta_lay = QVBoxLayout(meta_inner)
+self._detail_meta_lay.setContentsMargins(0,0,0,0); self._detail_meta_lay.setSpacing(Z(4))
+meta_scroll.setWidget(meta_inner)
+lay.addWidget(meta_scroll, 1)
 
         # ── User notes ────────────────────────────────────────────────────
-        notes_lbl = QLabel("Notes"); notes_lbl.setStyleSheet(f"color:{C('text_muted')}; font-size:{Z(10)}px; font-weight:600;")
-        lay.addWidget(notes_lbl)
-        self.detail_notes = QTextEdit()
-        self.detail_notes.setMaximumHeight(Z(60))
-        self.detail_notes.setPlaceholderText("Add notes about this clip...")
-        self.detail_notes.setStyleSheet(
-            "background:{C('bg_video')}; color:{C('text_soft')}; border:1px solid {C('bg_button')}; "
-            f"border-radius:{Z(4)}px; font-size:{Z(11)}px; padding:{Z(6)}px;")
-        self._notes_save_timer = QTimer(); self._notes_save_timer.setSingleShot(True)
-        self._notes_save_timer.timeout.connect(self._detail_save_notes)
-        self.detail_notes.textChanged.connect(lambda: self._notes_save_timer.start(800))
-        lay.addWidget(self.detail_notes)
+notes_lbl = QLabel("Notes"); notes_lbl.setStyleSheet(f"color:{C('text_muted')}; font-size:{Z(10)}px; font-weight:600;")
+lay.addWidget(notes_lbl)
+self.detail_notes = QTextEdit()
+self.detail_notes.setMaximumHeight(Z(60))
+self.detail_notes.setPlaceholderText("Add notes about this clip...")
+self.detail_notes.setStyleSheet(
+"background:{C('bg_video')}; color:{C('text_soft')}; border:1px solid {C('bg_button')}; "
+f"border-radius:{Z(4)}px; font-size:{Z(11)}px; padding:{Z(6)}px;")
+self._notes_save_timer = QTimer(); self._notes_save_timer.setSingleShot(True)
+self._notes_save_timer.timeout.connect(self._detail_save_notes)
+self.detail_notes.textChanged.connect(lambda: self._notes_save_timer.start(800))
+lay.addWidget(self.detail_notes)
 
-        # ── User tags ─────────────────────────────────────────────────────
-        tags_lbl = QLabel("My Tags (comma-separated)")
-        tags_lbl.setStyleSheet(f"color:{C('text_muted')}; font-size:{Z(10)}px; font-weight:600;")
-        lay.addWidget(tags_lbl)
-        self.detail_user_tags = QLineEdit()
-        self.detail_user_tags.setPlaceholderText("e.g. hero-shot, b-roll, client-xyz")
-        self.detail_user_tags.setFixedHeight(Z(28))
-        self.detail_user_tags.setStyleSheet(
-            "background:{C('bg_video')}; color:{C('accent_hover')}; border:1px solid {C('bg_button')}; "
-            f"border-radius:{Z(4)}px; font-size:{Z(11)}px; padding:{Z(4)}px {Z(8)}px;")
-        self._tags_save_timer = QTimer(); self._tags_save_timer.setSingleShot(True)
-        self._tags_save_timer.timeout.connect(self._detail_save_user_tags)
-        self.detail_user_tags.textChanged.connect(lambda: self._tags_save_timer.start(800))
-        lay.addWidget(self.detail_user_tags)
+# ── User tags ─────────────────────────────────────────────────────
+tags_lbl = QLabel("My Tags (comma-separated)")
+tags_lbl.setStyleSheet(f"color:{C('text_muted')}; font-size:{Z(10)}px; font-weight:600;")
+lay.addWidget(tags_lbl)
+self.detail_user_tags = QLineEdit()
+self.detail_user_tags.setPlaceholderText("e.g. hero-shot, b-roll, client-xyz")
+self.detail_user_tags.setFixedHeight(Z(28))
+self.detail_user_tags.setStyleSheet(
+"background:{C('bg_video')}; color:{C('accent_hover')}; border:1px solid {C('bg_button')}; "
+f"border-radius:{Z(4)}px; font-size:{Z(11)}px; padding:{Z(4)}px {Z(8)}px;")
+self._tags_save_timer = QTimer(); self._tags_save_timer.setSingleShot(True)
+self._tags_save_timer.timeout.connect(self._detail_save_user_tags)
+self.detail_user_tags.textChanged.connect(lambda: self._tags_save_timer.start(800))
+lay.addWidget(self.detail_user_tags)
 
         # ── Collection management ─────────────────────────────────────────
-        coll_row = QHBoxLayout(); coll_row.setSpacing(Z(4))
-        coll_lbl = QLabel("Collections:"); coll_lbl.setStyleSheet(f"color:{C('text_muted')}; font-size:{Z(10)}px; font-weight:600;")
-        coll_row.addWidget(coll_lbl)
-        self.detail_coll_combo = QComboBox(); self.detail_coll_combo.setFixedHeight(Z(26))
-        self.detail_coll_combo.setMinimumWidth(Z(100))
-        self.detail_coll_combo.addItem("Add to collection...")
-        coll_row.addWidget(self.detail_coll_combo, 1)
-        btn_add_coll = QPushButton("+"); btn_add_coll.setObjectName("success")
-        btn_add_coll.setFixedSize(Z(26), Z(26)); btn_add_coll.setToolTip("Add to selected collection")
-        btn_add_coll.clicked.connect(self._detail_add_to_collection)
-        coll_row.addWidget(btn_add_coll)
-        btn_new_coll = QPushButton("New"); btn_new_coll.setObjectName("neutral")
-        btn_new_coll.setFixedSize(Z(40), Z(26)); btn_new_coll.setToolTip("Create new collection")
-        btn_new_coll.clicked.connect(self._detail_create_collection)
-        coll_row.addWidget(btn_new_coll)
-        lay.addLayout(coll_row)
+coll_row = QHBoxLayout(); coll_row.setSpacing(Z(4))
+coll_lbl = QLabel("Collections:"); coll_lbl.setStyleSheet(f"color:{C('text_muted')}; font-size:{Z(10)}px; font-weight:600;")
+coll_row.addWidget(coll_lbl)
+self.detail_coll_combo = QComboBox(); self.detail_coll_combo.setFixedHeight(Z(26))
+self.detail_coll_combo.setMinimumWidth(Z(100))
+self.detail_coll_combo.addItem("Add to collection...")
+coll_row.addWidget(self.detail_coll_combo, 1)
+btn_add_coll = QPushButton("+"); btn_add_coll.setObjectName("success")
+btn_add_coll.setFixedSize(Z(26), Z(26)); btn_add_coll.setToolTip("Add to selected collection")
+btn_add_coll.clicked.connect(self._detail_add_to_collection)
+coll_row.addWidget(btn_add_coll)
+btn_new_coll = QPushButton("New"); btn_new_coll.setObjectName("neutral")
+btn_new_coll.setFixedSize(Z(40), Z(26)); btn_new_coll.setToolTip("Create new collection")
+btn_new_coll.clicked.connect(self._detail_create_collection)
+coll_row.addWidget(btn_new_coll)
+lay.addLayout(coll_row)
 
-        # Collection chips (shows which collections this clip belongs to)
-        self._detail_coll_chips = QWidget(); self._detail_coll_chips.setStyleSheet("background:transparent;")
-        self._detail_coll_chips_lay = FlowLayout(self._detail_coll_chips, h_spacing=Z(4), v_spacing=Z(4))
-        self._detail_coll_chips_lay.setContentsMargins(0,0,0,0)
-        lay.addWidget(self._detail_coll_chips)
+# Collection chips (shows which collections this clip belongs to)
+self._detail_coll_chips = QWidget(); self._detail_coll_chips.setStyleSheet("background:transparent;")
+self._detail_coll_chips_lay = FlowLayout(self._detail_coll_chips, h_spacing=Z(4), v_spacing=Z(4))
+self._detail_coll_chips_lay.setContentsMargins(0,0,0,0)
+lay.addWidget(self._detail_coll_chips)
 
         # ── Action buttons ────────────────────────────────────────────────
-        btn_row1 = QHBoxLayout()
-        self.btn_detail_play = QPushButton("Open File")
-        self.btn_detail_play.setObjectName("success"); self.btn_detail_play.setFixedHeight(Z(30))
-        self.btn_detail_play.clicked.connect(self._detail_play)
-        btn_row1.addWidget(self.btn_detail_play)
-        self.btn_detail_copy_m3u8 = QPushButton("Copy M3U8")
-        self.btn_detail_copy_m3u8.setObjectName("neutral"); self.btn_detail_copy_m3u8.setFixedHeight(Z(30))
-        self.btn_detail_copy_m3u8.clicked.connect(self._detail_copy_m3u8)
-        btn_row1.addWidget(self.btn_detail_copy_m3u8)
-        self.btn_detail_open_folder = QPushButton("Folder")
-        self.btn_detail_open_folder.setObjectName("neutral"); self.btn_detail_open_folder.setFixedHeight(Z(30))
-        self.btn_detail_open_folder.clicked.connect(self._detail_open_file)
-        btn_row1.addWidget(self.btn_detail_open_folder)
-        self.btn_detail_source = QPushButton("Web")
-        self.btn_detail_source.setObjectName("neutral"); self.btn_detail_source.setFixedHeight(Z(30))
-        self.btn_detail_source.clicked.connect(self._detail_open_source)
-        btn_row1.addWidget(self.btn_detail_source)
-        lay.addLayout(btn_row1)
+btn_row1 = QHBoxLayout()
+self.btn_detail_play = QPushButton("Open File")
+self.btn_detail_play.setObjectName("success"); self.btn_detail_play.setFixedHeight(Z(30))
+self.btn_detail_play.clicked.connect(self._detail_play)
+btn_row1.addWidget(self.btn_detail_play)
+self.btn_detail_copy_m3u8 = QPushButton("Copy M3U8")
+self.btn_detail_copy_m3u8.setObjectName("neutral"); self.btn_detail_copy_m3u8.setFixedHeight(Z(30))
+self.btn_detail_copy_m3u8.clicked.connect(self._detail_copy_m3u8)
+btn_row1.addWidget(self.btn_detail_copy_m3u8)
+self.btn_detail_open_folder = QPushButton("Folder")
+self.btn_detail_open_folder.setObjectName("neutral"); self.btn_detail_open_folder.setFixedHeight(Z(30))
+self.btn_detail_open_folder.clicked.connect(self._detail_open_file)
+btn_row1.addWidget(self.btn_detail_open_folder)
+self.btn_detail_source = QPushButton("Web")
+self.btn_detail_source.setObjectName("neutral"); self.btn_detail_source.setFixedHeight(Z(30))
+self.btn_detail_source.clicked.connect(self._detail_open_source)
+btn_row1.addWidget(self.btn_detail_source)
+lay.addLayout(btn_row1)
 
-        self._detail_clip = None
-        return panel
+self._detail_clip = None
+return panel
 
-    def _show_detail(self, row):
-        if row is None: return
-        keys = row.keys() if hasattr(row, 'keys') else {}
-        def _g(k): return str(row[k] if k in keys and row[k] else '')
+def    _show_detail(self,row):
+    if row is None: return
+keys = row.keys() if hasattr(row, 'keys') else {}
+def _g(k): return str(row[k] if k in keys and row[k] else '')
 
-        self._detail_clip = row
-        clip_id   = _g('clip_id')
-        title     = _g('title') or clip_id
-        thumb_p   = _g('thumb_path')
-        local_p   = _g('local_path')
-        m3u8      = _g('m3u8_url')
-        source    = _g('source_url')
-        thumb_dir = self._thumb_dir()
+self._detail_clip = row
+clip_id   = _g('clip_id')
+title     = _g('title') or clip_id
+thumb_p   = _g('thumb_path')
+local_p   = _g('local_path')
+m3u8      = _g('m3u8_url')
+source    = _g('source_url')
+thumb_dir = self._thumb_dir()
 
-        self.detail_title.setText(title)
+self.detail_title.setText(title)
 
         # ── Favorite state ────────────────────────────────────────────────
-        fav = int(_g('favorited') or 0)
-        self.btn_detail_fav.setText('\u2665' if fav else '\u2661')
-        self.btn_detail_fav.setStyleSheet(
-            f"font-size:{Z(18)}px; background:transparent; border:none; "
-            f"color:{C('error') if fav else C('border_light')};")
+fav = int(_g('favorited') or 0)
+self.btn_detail_fav.setText('\u2665' if fav else '\u2661')
+self.btn_detail_fav.setStyleSheet(
+f"font-size:{Z(18)}px; background:transparent; border:none; "
+f"color:{C('error') if fav else C('border_light')};")
 
         # ── Star rating ───────────────────────────────────────────────────
-        self.detail_stars.set_rating(int(_g('user_rating') or 0))
+self.detail_stars.set_rating(int(_g('user_rating') or 0))
 
         # ── Preview: video player or thumbnail ────────────────────────────
-        has_local = bool(local_p and os.path.isfile(local_p))
-        if _HAS_VIDEO and has_local and self._video_player:
-            self._video_player.setSource(QUrl.fromLocalFile(local_p))
-            self._preview_stack.setCurrentIndex(1)
-            # Auto-play video on selection
-            self._video_player.play()
-        else:
-            # Stop any playing video
-            if self._video_player:
-                self._video_player.stop()
-            self._preview_stack.setCurrentIndex(0)
-            # Show thumbnail
-            pm = None
-            if thumb_p and os.path.isfile(thumb_p): pm = QPixmap(thumb_p)
-            elif clip_id:
-                cand = os.path.join(thumb_dir, f"{clip_id}.jpg")
-                if os.path.isfile(cand): pm = QPixmap(cand)
-            if pm and not pm.isNull():
-                tw, _th = Z(408), Z(200)
-                scaled = pm.scaled(tw, _th, Qt.AspectRatioMode.KeepAspectRatio,
-                                   Qt.TransformationMode.SmoothTransformation)
-                canvas = QPixmap(tw, _th); canvas.fill(QColor(C('bg_deep')))
-                painter = QPainter(canvas)
-                painter.drawPixmap((tw-scaled.width())//2, (_th-scaled.height())//2, scaled)
-                painter.end()
-                self.detail_thumb.setPixmap(canvas)
-            else:
-                self.detail_thumb.setText("No thumbnail")
-                self.detail_thumb.setStyleSheet(
-                    f"background:{C('bg_video')}; border-radius:{Z(6)}px; color:{C('border_light')}; font-size:{Z(12)}px;")
+has_local = bool(local_p and os.path.isfile(local_p))
+
+self._video_player.setSource(QUrl.fromLocalFile(local_p))
+self._preview_stack.setCurrentIndex(1)
+# Auto-play video on selection
+self._video_player.play();
+
+#Stop any playing video
+if self._video_player:
+	self._video_player.stop()
+self._preview_stack.setCurrentIndex(0)
+# Show thumbnail
+pm = None
+if thumb_p and os.path.isfile(thumb_p): 
+	pm = QPixmap(thumb_p)
+elif clip_id:
+	cand = os.path.join(thumb_dir, f"{clip_id}.jpg")
+if os.path.isfile(cand): pm = QPixmap(cand)
+if pm and not pm.isNull():
+	tw, _th = Z(408), Z(200)
+scaled = pm.scaled(tw, _th, Qt.AspectRatioMode.KeepAspectRatio,
+Qt.TransformationMode.SmoothTransformation)
+canvas = QPixmap(tw, _th); canvas.fill(QColor(C('bg_deep')))
+painter = QPainter(canvas)
+painter.drawPixmap((tw-scaled.width())//2, (_th-scaled.height())//2, scaled)
+painter.end()
+self.detail_thumb.setPixmap(canvas)
+else:
+self.detail_thumb.setText("No thumbnail")
+self.detail_thumb.setStyleSheet(
+f"background:{C('bg_video')}; border-radius:{Z(6)}px; color:{C('border_light')}; font-size:{Z(12)}px;")
 
         # ── Metadata rows ─────────────────────────────────────────────────
         while self._detail_meta_lay.count():
@@ -7720,7 +7721,7 @@ class MainWindow(QMainWindow):
         self.detail_coll_combo.setCurrentIndex(0)
 
     def _detail_create_collection(self):
-        from PyQt6.QtWidgets import QInputDialog
+        from PyQt5.QtWidgets import QInputDialog
         name, ok = QInputDialog.getText(self, "New Collection", "Collection name:")
         if ok and name.strip():
             name = name.strip()
@@ -7751,7 +7752,7 @@ class MainWindow(QMainWindow):
 
     def _preview_toggle_play(self):
         if not _HAS_VIDEO or not self._video_player: return
-        from PyQt6.QtMultimedia import QMediaPlayer
+        from PyQt5.QtMultimedia import QMediaPlayer
         if self._video_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self._video_player.pause()
             self.btn_preview_play.setText("Play")
@@ -8910,7 +8911,7 @@ class MainWindow(QMainWindow):
         self._toast(f"Added {len(clip_ids)} clip(s) to collection", 'success', 2000)
 
     def _ctx_new_collection(self, clip_ids):
-        from PyQt6.QtWidgets import QInputDialog
+        from PyQt5.QtWidgets import QInputDialog
         name, ok = QInputDialog.getText(self, "New Collection", "Collection name:")
         if ok and name.strip():
             coll_id = self.db.create_collection(name.strip())
@@ -9424,3 +9425,4 @@ if __name__ == '__main__':
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
+from PyQt5.QtWidgets import QShortcut, QAction
